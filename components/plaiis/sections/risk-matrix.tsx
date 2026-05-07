@@ -5,6 +5,7 @@ import { GovControlData } from '@/lib/plaiis/data-simulator';
 import { RiskLevelBadge, StateBadge } from '../status-badges';
 import { useState } from 'react';
 import { Edit2, Check } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface RiskMatrixProps {
   data: GovControlData;
@@ -37,6 +38,26 @@ export default function RiskMatrix({ data, onUpdate }: RiskMatrixProps) {
   const highRisks = data.risks.filter(r => r.nivel === 'alto');
   const totalRisks = data.risks.length;
 
+  // Mapeo para convertir texto a números
+  const probabilityMap = { baja: 1, media: 2, alta: 3 };
+  const impactMap = { bajo: 1, medio: 2, alto: 3 };
+
+  // Datos para gráfico
+  const chartData = data.risks.map(risk => ({
+    x: impactMap[risk.impacto as keyof typeof impactMap] || 1,
+    y: probabilityMap[risk.probabilidad as keyof typeof probabilityMap] || 1,
+    name: risk.riesgo,
+    nivel: risk.nivel,
+    fill:
+      risk.nivel === 'critico'
+        ? '#dc2626'
+        : risk.nivel === 'alto'
+          ? '#ea580c'
+          : risk.nivel === 'medio'
+            ? '#d97706'
+            : '#16a34a',
+  }));
+
   return (
     <div className="flex-1 overflow-auto p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -62,9 +83,75 @@ export default function RiskMatrix({ data, onUpdate }: RiskMatrixProps) {
           </Card>
         </div>
 
+        {/* Gráfico de Matriz de Riesgos */}
+        <Card className="p-6">
+          <h3 className="font-bold text-foreground mb-4">Visualización de Matriz de Riesgos (Probabilidad vs Impacto)</h3>
+          <div className="w-full h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  dataKey="x"
+                  name="Impacto"
+                  domain={[0, 3.5]}
+                  label={{ value: 'Impacto →', position: 'bottom', offset: 20 }}
+                  tickFormatter={(value) => {
+                    const labels: Record<number, string> = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
+                    return labels[value] || '';
+                  }}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="y"
+                  name="Probabilidad"
+                  domain={[0, 3.5]}
+                  label={{ value: '← Probabilidad', angle: -90, position: 'insideLeft' }}
+                  tickFormatter={(value) => {
+                    const labels: Record<number, string> = { 1: 'Baja', 2: 'Media', 3: 'Alta' };
+                    return labels[value] || '';
+                  }}
+                />
+                <Tooltip
+                  cursor={{ strokeDasharray: '3 3' }}
+                  content={({ payload }) => {
+                    if (!payload || !payload[0]) return null;
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-background border border-border rounded p-2 text-xs">
+                        <p className="font-bold">{data.name}</p>
+                        <p className="text-muted-foreground">Nivel: {data.nivel}</p>
+                      </div>
+                    );
+                  }}
+                />
+                <Scatter name="Riesgos" data={chartData} fill="#8884d8" />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-600 rounded"></div>
+              <span>Críticos</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-orange-600 rounded"></div>
+              <span>Altos</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-amber-600 rounded"></div>
+              <span>Medios</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-600 rounded"></div>
+              <span>Bajos</span>
+            </div>
+          </div>
+        </Card>
+
         {/* Matriz de Riesgos */}
         <Card className="p-6">
-          <h3 className="font-bold text-foreground mb-4">Matriz de Riesgos Identificados</h3>
+          <h3 className="font-bold text-foreground mb-4">Matriz de Riesgos Identificados (Editable)</h3>
           <p className="text-sm text-muted-foreground mb-4">Haz clic en cualquier campo para editar (inline)</p>
           
           <div className="overflow-x-auto">
