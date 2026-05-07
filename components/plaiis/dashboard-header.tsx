@@ -1,13 +1,16 @@
 'use client';
 
-import { AlertCircle, Lock, RotateCcw } from 'lucide-react';
+import { AlertCircle, Lock, RotateCcw, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import StatusBadge from './status-badges';
+import { GovControlData } from '@/lib/plaiis/data-simulator';
+import { generateHTMLReport, downloadHTMLReport } from '@/lib/plaiis/export-html';
 
 interface DashboardHeaderProps {
   projectStatus: string;
   recommendation: string;
   isBlocked: boolean;
+  data: GovControlData;
   onToggleBlock: () => void;
   onResetData: () => void;
 }
@@ -16,9 +19,16 @@ export default function DashboardHeader({
   projectStatus,
   recommendation,
   isBlocked,
+  data,
   onToggleBlock,
   onResetData,
 }: DashboardHeaderProps) {
+  const handleExportHTML = () => {
+    const html = generateHTMLReport(data);
+    const filename = `PLAIIS-GovControl-${new Date().toISOString().split('T')[0]}.html`;
+    downloadHTMLReport(html, filename);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'no_apto_lanzamiento':
@@ -82,6 +92,16 @@ export default function DashboardHeader({
         )}
 
         {/* Botones de Acción */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportHTML}
+          className="gap-2"
+        >
+          <Download size={16} />
+          Exportar HTML
+        </Button>
+
         <Button
           variant={isBlocked ? 'default' : 'outline'}
           size="sm"

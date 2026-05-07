@@ -70,6 +70,7 @@ export default function DashboardPage() {
           projectStatus={data.projectStatus}
           recommendation={data.recommendation}
           isBlocked={data.isBlocked}
+          data={data}
           onToggleBlock={() => {
             GovControlStorage.toggleBlockLaunch();
             setData(GovControlStorage.getData());
