@@ -91,17 +91,6 @@ export default function DashboardHeader({
           </div>
         )}
 
-        {/* Botones de Acción */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportHTML}
-          className="gap-2"
-        >
-          <Download size={16} />
-          Exportar HTML
-        </Button>
-
         <Button
           variant={isBlocked ? 'default' : 'outline'}
           size="sm"
